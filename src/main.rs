@@ -163,6 +163,7 @@ fn main() {
         .arg(Arg::with_name("listen")
              .short("l")
              .long("listen")
+             .takes_value(true)
              .help("The listen address in host:port form (default: localhost:5555)"));
 
     // Manually build up the arguments list for each protocol.
