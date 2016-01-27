@@ -8,11 +8,11 @@ enum DetectResult {
 type DetectFn = fn(&[u8]) -> DetectResult;
 
 const PROTOCOLS: &'static [(&'static str, DetectFn)] = &[
-    ("tls", detect_tls),
+    ("tls", detect_is_tls),
 ];
 
 
-fn detect_tls(buf: &[u8]) -> DetectResult {
+fn detect_is_tls(buf: &[u8]) -> DetectResult {
     if buf.len() < 3 {
         return DetectResult::NotEnoughData;
     }
