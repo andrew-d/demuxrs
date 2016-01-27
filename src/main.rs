@@ -88,6 +88,11 @@ fn handle_connection(mut conn: TcpStream, config: Arc<Config>) -> io::Result<()>
     let mut buf = [0u8; 1024];
     let mut nread = 0usize;
 
+    let peer = match conn.peer_addr() {
+        Ok(a) => format!("{}", a),
+        Err(_) => "<unknown>".to_string(),
+    };
+
     loop {
         // If our 'nread' value is full (i.e. we can't read more data), we just finish our loop.
         if nread == buf.len() {
@@ -110,7 +115,7 @@ fn handle_connection(mut conn: TcpStream, config: Arc<Config>) -> io::Result<()>
 
             timer:r => {
                 // Timeout :-(
-                trace!("timing out connection");
+                trace!("Timing out connection from: {}", peer);
                 let _ = conn.shutdown(mioco::tcp::Shutdown::Both);
                 return Ok(());
             },
@@ -129,11 +134,12 @@ fn handle_connection(mut conn: TcpStream, config: Arc<Config>) -> io::Result<()>
     // Run one final detect...
     if let Some(protocol) = detect::detect(&buf[..nread]) {
         debug!("Got protocol: {}", protocol);
-        handle_proxy(conn, protocol, &buf[..nread], config)
-    } else {
-        // TODO: default / fallback?
-        Ok(())
+        return handle_proxy(conn, protocol, &buf[..nread], config);
     }
+
+    // TODO: default / fallback?
+    warn!("Don't know how to handle connection from: {}", peer);
+    Ok(())
 }
 
 fn main() {
