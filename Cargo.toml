@@ -1,0 +1,15 @@
+[package]
+name = "demuxrs"
+version = "0.1.0"
+authors = ["Andrew Dunham <andrew@du.nham.ca>"]
+
+[dependencies]
+ansi_term = "*"
+clap = "1.5.5"
+fern = "0.3.5"
+log = "0.3"
+time = "0.1"
+
+[dependencies.mioco]
+git = "https://github.com/dpc/mioco.git"
+rev = "ee5daa10c81dab07730b6e41b95faf9f6b8b0ad6"
