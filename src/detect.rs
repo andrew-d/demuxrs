@@ -11,6 +11,7 @@ const PROTOCOLS: &'static [(&'static str, DetectFn)] = &[
     ("tls", detect_is_tls),
     ("http", detect_is_http),
     ("ssh", detect_is_ssh),
+    ("xmpp", detect_is_xmpp),
 ];
 
 
@@ -69,6 +70,22 @@ fn detect_is_http(buf: &[u8]) -> DetectResult {
     }
 
     DetectResult::Failure
+}
+
+fn detect_is_xmpp(buf: &[u8]) -> DetectResult {
+    // From SSLH:
+    //
+    // Sometimes the word 'jabber' shows up late in the initial string, sometimes after a newline.
+    // This makes sure we snarf the entire preamble and detect it.
+    if buf.len() < 50 {
+        return DetectResult::NotEnoughData;
+    }
+
+    if buf.windows(6).any(|b| b == b"jabber") {
+        DetectResult::Success
+    } else {
+        DetectResult::Failure
+    }
 }
 
 pub fn detect(buf: &[u8]) -> Option<&'static str> {
