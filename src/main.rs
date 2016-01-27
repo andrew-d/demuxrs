@@ -111,7 +111,7 @@ fn handle_connection(mut conn: TcpStream, config: Arc<Config>) -> io::Result<()>
             timer:r => {
                 // Timeout :-(
                 trace!("timing out connection");
-                conn.shutdown(mioco::tcp::Shutdown::Both).unwrap();
+                let _ = conn.shutdown(mioco::tcp::Shutdown::Both);
                 return Ok(());
             },
         );
