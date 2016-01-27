@@ -25,6 +25,7 @@ const DEFAULT_LISTEN_ADDR : &'static str = "127.0.0.1:5555";
 struct Config {
     listen_addr: SocketAddr,
     upstreams: HashMap<&'static str, SocketAddr>,
+    timeout: i64,
 }
 
 impl Config {
@@ -94,7 +95,7 @@ fn handle_connection(mut conn: TcpStream, config: Arc<Config>) -> io::Result<()>
         }
 
         let mut timer = mioco::timer::Timer::new();
-        timer.set_timeout(5000);
+        timer.set_timeout(config.timeout);
 
         select!(
             conn:r => {
@@ -155,6 +156,10 @@ fn main() {
              .short("d")
              .multiple(true)
              .help("Sets the level of debugging information"))
+        .arg(Arg::with_name("timeout")
+             .short("t")
+             .long("timeout")
+             .help("Timeout (in milliseconds) for reads (only before a protocol is detected)"))
         .arg(Arg::with_name("listen")
              .short("l")
              .long("listen")
@@ -186,10 +191,23 @@ fn main() {
         }
     };
 
+    // Parse timeout
+    let timeout = {
+        let s = matches.value_of("timeout").unwrap_or("1000");
+        match FromStr::from_str(s) {
+            Ok(v) => v,
+            Err(e) => {
+                error!("Invalid timeout '{}': {}", s, e);
+                return;
+            },
+        }
+    };
+
     // Parse the upstreams into SocketAddrs.
     let mut config = Config {
         listen_addr: listen_addr,
         upstreams: HashMap::new(),
+        timeout: timeout,
     };
     for &(proto, ref arg_name, _) in arg_names.iter() {
         let saddr = match matches.value_of(&*arg_name) {
