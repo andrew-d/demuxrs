@@ -230,7 +230,13 @@ fn main() {
 
     mioco::start(move || {
         let config = Arc::new(config);
-        let listener = TcpListener::bind(&config.listen_addr).unwrap();
+        let listener = match TcpListener::bind(&config.listen_addr) {
+            Ok(l) => l,
+            Err(e) => {
+                error!("Could not bind TCP listener to '{}': {}", config.listen_addr, e);
+                return Err(e);
+            },
+        };
 
         info!("Starting demux server on {:?}", listener.local_addr().unwrap());
 
