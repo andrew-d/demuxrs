@@ -93,14 +93,16 @@ fn handle_connection(mut conn: TcpStream, config: Arc<Config>) -> io::Result<()>
         Err(_) => "<unknown>".to_string(),
     };
 
+    // We have a global timeout - if we don't get either a detection or a full buffer by this
+    // point, we drop the connection.
+    let mut timer = mioco::timer::Timer::new();
+    timer.set_timeout(config.timeout);
+
     loop {
         // If our 'nread' value is full (i.e. we can't read more data), we just finish our loop.
         if nread == buf.len() {
             break;
         }
-
-        let mut timer = mioco::timer::Timer::new();
-        timer.set_timeout(config.timeout);
 
         select!(
             conn:r => {
@@ -165,7 +167,7 @@ fn main() {
         .arg(Arg::with_name("timeout")
              .short("t")
              .long("timeout")
-             .help("Timeout (in milliseconds) for reads (only before a protocol is detected)"))
+             .help("Timeout (in milliseconds) for protocol detection"))
         .arg(Arg::with_name("listen")
              .short("l")
              .long("listen")
